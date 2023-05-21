@@ -5,8 +5,11 @@ use std::io::prelude::*;
 use std::io::BufReader;
 
 fn main() -> Result<(), String> {
+    // read in file
     let args: Vec<String> = env::args().collect();
-    // dbg!(&args);
+    if args.len() < 2 {
+        return Err("please provide a file".to_string());
+    }
     let file_path = &args[1];
     let contents = match read_in_file(&file_path) {
         Ok(contents) => contents,
@@ -15,6 +18,7 @@ fn main() -> Result<(), String> {
         }
     };
 
+    // lexering
     let mut keys: HashMap<char, Instruction> = HashMap::new();
     keys.insert('<', Instruction::Left);
     keys.insert('>', Instruction::Right);
@@ -24,12 +28,11 @@ fn main() -> Result<(), String> {
     keys.insert(']', Instruction::End);
     keys.insert('.', Instruction::Print);
     keys.insert(',', Instruction::Input);
+
     let instructions = contents
         .chars()
         .filter_map(|x| keys.get(&x))
         .collect::<Vec<&Instruction>>();
-
-    // println!("{:?}", instructions);
 
     do_your_thing(instructions)?;
 
