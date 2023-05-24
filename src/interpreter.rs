@@ -4,6 +4,7 @@ use std::io::Read;
 pub struct Program<'a> {
     tape: [u8; 30000],
     tokens: &'a Vec<Token>,
+    last_pointer: usize,
 }
 
 impl<'a> Program<'a> {
@@ -12,13 +13,13 @@ impl<'a> Program<'a> {
         Program {
             tape: [0; 30000],
             tokens: input_tokens,
+            last_pointer: 0,
         }
     }
     pub fn run(&mut self) -> Result<(), RuntimeError> {
         let mut pointer: usize = 0;
         let mut token_number: usize = 0;
         let mut loop_indexes: Vec<usize> = Vec::new();
-
         while token_number < self.tokens.len() {
             if self.tokens.get(token_number).unwrap() == &Token::Left {
                 if pointer == 0 {
@@ -42,24 +43,31 @@ impl<'a> Program<'a> {
                 token_number += 1;
             } else if self.tokens.get(token_number).unwrap() == &Token::Begin {
                 if self.tape[pointer] == 0 {
-                    let mut loop_number = token_number + 1;
-                    let mut offset = 0;
-                    while loop_number < self.tokens.len() {
-                        if self.tokens.get(loop_number).unwrap() == &Token::End && offset == 0 {
-                            token_number = loop_number + 1;
+                    let mut loop_number = token_number;
+                    let mut offset: i32 = 0;
+                    loop {
+                        if loop_number >= self.tokens.len() {
+                            return Err(RuntimeError::MissingBracket);
+                        }
+                        if (self.tokens.get(loop_number).unwrap() == &Token::End) && (offset == 0) {
                             break;
-                        } else if self.tokens.get(loop_number).unwrap() == &Token::Begin {
+                        }
+                        if self.tokens.get(loop_number).unwrap() == &Token::Begin {
                             offset -= 1;
                         } else if self.tokens.get(loop_number).unwrap() == &Token::End {
                             offset += 1;
                         }
                         loop_number += 1;
                     }
+                    token_number = loop_number + 1;
                 } else {
                     loop_indexes.push(token_number);
                     token_number += 1;
                 }
             } else if self.tokens.get(token_number).unwrap() == &Token::End {
+                if loop_indexes.len() == 0 {
+                    return Err(RuntimeError::MissingBracket);
+                }
                 if self.tape[pointer] == 0 {
                     loop_indexes.pop();
                     token_number += 1;
@@ -67,8 +75,8 @@ impl<'a> Program<'a> {
                     token_number = *loop_indexes.last().unwrap() + 1;
                 }
             } else if self.tokens.get(token_number).unwrap() == &Token::Print {
-                token_number += 1;
                 print!("{}", self.tape[pointer] as char);
+                token_number += 1;
             } else if self.tokens.get(token_number).unwrap() == &Token::Input {
                 self.tape[pointer] = std::io::stdin().bytes().next().unwrap().unwrap();
                 token_number += 1;
@@ -76,11 +84,12 @@ impl<'a> Program<'a> {
                 return Err(RuntimeError::UnexpectedToken);
             }
         }
-
+        self.last_pointer = pointer;
         Ok(())
     }
     pub fn print_memory(&self, begin: usize, end: usize) {
         println!("{:?}", &self.tape[begin..end]);
+        println!("Pointer Value: {}", &self.last_pointer);
     }
 }
 
