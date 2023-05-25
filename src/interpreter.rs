@@ -5,6 +5,7 @@ pub struct Program<'a> {
     tape: [u8; 30000],
     tokens: &'a Vec<Token>,
     last_pointer: usize,
+    furthest_memory_point: usize,
 }
 
 impl<'a> Program<'a> {
@@ -14,6 +15,7 @@ impl<'a> Program<'a> {
             tape: [0; 30000],
             tokens: input_tokens,
             last_pointer: 0,
+            furthest_memory_point: 0,
         }
     }
     pub fn run(&mut self) -> Result<(), RuntimeError> {
@@ -83,13 +85,27 @@ impl<'a> Program<'a> {
             } else {
                 return Err(RuntimeError::UnexpectedToken);
             }
+            if pointer > self.furthest_memory_point {
+                self.furthest_memory_point = pointer as usize;
+            }
         }
         self.last_pointer = pointer;
         Ok(())
     }
-    pub fn print_memory(&self, begin: usize, end: usize) {
-        println!("{:?}", &self.tape[begin..end]);
-        println!("Pointer Value: {}", &self.last_pointer);
+
+    pub fn print_memory(&self) {
+        println!(
+            "{:?}",
+            &self.tape[0..=self.furthest_memory_point]
+                .iter()
+                .map(|val| match val {
+                    val if val < &10 => "00".to_owned() + &val.to_string(),
+                    val if val < &99 => "0".to_owned() + &val.to_string(),
+                    _ => val.to_string(),
+                })
+                .collect::<Vec<String>>()
+        );
+        println!("   {}^", "       ".repeat(self.last_pointer),);
     }
 }
 

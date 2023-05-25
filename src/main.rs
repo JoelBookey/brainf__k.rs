@@ -14,6 +14,14 @@ fn main() -> Result<(), String> {
     if args.len() < 2 {
         return Err("please provide a file".to_string());
     }
+    let mut show_memory = false;
+    if args.len() > 2 {
+        if args[2] == "show-memory" {
+            show_memory = true;
+        } else {
+            return Err(format!("Unexpected argument: {}", args[2]));
+        }
+    }
 
     // read file from arguments
     let file_path = &args[1];
@@ -44,7 +52,9 @@ fn main() -> Result<(), String> {
     let mut program = Program::new(&tokens);
     program.run()?;
     println!();
-    program.print_memory(0, 50);
+    if show_memory {
+        program.print_memory();
+    }
     Ok(())
 }
 

@@ -8,7 +8,7 @@ impl From<RuntimeError> for String {
     fn from(error: RuntimeError) -> Self {
         let error_msg = match error {
             RuntimeError::UnexpectedToken => "Unexpected Token",
-            RuntimeError::MissingBracket => "No matching loop bracket",
+            RuntimeError::MissingBracket => "Missing a loop bracket",
         };
         String::from(error_msg)
     }
