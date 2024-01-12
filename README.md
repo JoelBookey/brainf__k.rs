@@ -1,2 +1,2 @@
 # brainf__k.rs
-Brainf**k interpreter written in rust.
+Brainf**k virtual machine written in rust.
